@@ -1,0 +1,140 @@
+.avatar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  max-width: 1000px;
+  margin: 0 auto 60px;
+  position: relative;
+  z-index: 2;
+  align-items: center;
+}
+
+.avatarCard {
+  background: var(--paper);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 24px 16px 28px 14px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.portrait {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 24px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(26, 27, 58, 0.2);
+  min-width: 0;
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: var(--brick);
+  font-weight: 700;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.value {
+  font-weight: 600;
+  font-size: 15px;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.story {
+  color: var(--paper);
+}
+
+.lead {
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.text {
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.beliefs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.beliefCard {
+  padding: 28px 24px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 20px 14px 24px 16px;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.beliefCard:hover {
+  transform: translateY(-4px);
+}
+
+.beliefCard p {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  padding-top: 28px;
+}
+
+.beliefNum {
+  font-family: var(--font-display);
+  font-size: 13px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+.belief-sun { background: var(--sun); }
+.belief-brick { background: var(--brick); }
+.belief-brick p { color: var(--paper); }
+.belief-aqua { background: var(--aqua); }
+.belief-aqua p { color: var(--paper); }
+
+.tentacle {
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  transform: rotate(15deg);
+}
+
+@media (max-width: 1024px) {
+  .avatar { grid-template-columns: 1fr; gap: 36px; }
+  .beliefs { grid-template-columns: 1fr; }
+}

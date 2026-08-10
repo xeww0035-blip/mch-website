@@ -1,0 +1,68 @@
+.footer {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 60px 24px 36px;
+  position: relative;
+}
+
+.beadRow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+  padding-top: 24px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.tag {
+  opacity: 0.5;
+  font-size: 13px;
+}
+
+.text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--sun);
+  margin-bottom: 28px;
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.links a {
+  padding: 7px 14px;
+  border: 2px solid rgba(244, 236, 216, 0.3);
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.links a:hover {
+  background: var(--sun);
+  color: var(--ink);
+  border-color: var(--sun);
+}
+
+.copy {
+  font-size: 12px;
+  opacity: 0.4;
+}

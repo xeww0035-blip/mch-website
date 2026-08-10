@@ -1,0 +1,235 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.card {
+  padding: 32px 24px;
+  background: var(--paper);
+  border: var(--stroke) solid var(--ink);
+  border-radius: 22px 16px 26px 14px;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-4px) rotate(-1deg);
+}
+
+.featured {
+  background: var(--sun);
+  transform: rotate(-1deg);
+}
+
+.featured:hover {
+  transform: translateY(-4px) rotate(-2deg);
+}
+
+.badge {
+  position: absolute;
+  top: -12px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--brick);
+  color: var(--paper);
+  border: 2.5px solid var(--ink);
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 12px;
+  transform: rotate(8deg);
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  border: var(--stroke-sm) solid var(--ink);
+  border-radius: 14px 10px 16px 8px;
+  background: var(--paper);
+}
+
+.card h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: 14px;
+  color: rgba(26, 27, 58, 0.7);
+  margin-bottom: 18px;
+}
+
+.note {
+  display: inline-block;
+  padding: 7px 14px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* 社交链接区 */
+.socialsBlock {
+  max-width: 760px;
+  margin: 64px auto 0;
+  position: relative;
+  z-index: 2;
+}
+
+.socialsLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  font-weight: 700;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.socialsList {
+  border-top: var(--stroke) solid var(--ink);
+}
+
+.socialRow {
+  display: grid;
+  grid-template-columns: 56px 36px minmax(110px, 0.45fr) minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 16px;
+  text-decoration: none;
+  color: var(--ink);
+  border-bottom: var(--stroke) solid var(--ink);
+  transition: padding-left 0.5s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+
+.social-row-xhs { background: #FFE8EC; }
+.social-row-dy { background: #E0F4F8; }
+.social-row-mail { background: #FEF3D0; }
+
+.socialRow:hover {
+  padding-left: 36px;
+  background: var(--sun);
+}
+
+.socialIco {
+  width: 56px;
+  height: 56px;
+  border: var(--stroke-sm) solid var(--ink);
+  border-radius: 16px 12px 18px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s, color 0.4s;
+  flex: none;
+}
+
+.social-row-xhs .socialIco { background: var(--pink); color: var(--paper); }
+.social-row-dy .socialIco { background: var(--aqua); color: var(--paper); }
+.social-row-mail .socialIco { background: var(--sun); color: var(--ink); }
+
+.socialRow:hover .socialIco {
+  transform: rotate(-8deg) scale(1.08);
+  background: var(--ink);
+  color: var(--sun);
+}
+
+.socialIdx {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  opacity: 0.5;
+  font-weight: 600;
+}
+
+.socialName {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+.socialName::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  bottom: 2px;
+  width: 0;
+  height: 40%;
+  background: var(--sun);
+  z-index: -1;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.socialRow:hover .socialName::after {
+  width: calc(100% + 4px);
+}
+
+.socialVal {
+  font-size: 13px;
+  color: var(--ink);
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.4s;
+}
+
+.socialRow:hover .socialVal {
+  opacity: 1;
+}
+
+.socialArr {
+  font-size: 24px;
+  font-weight: 900;
+  opacity: 0;
+  transform: translateX(-14px);
+  transition: opacity 0.4s, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.socialRow:hover .socialArr {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .socialsBlock { margin-top: 48px; }
+  .socialRow {
+    grid-template-columns: 48px 1fr 24px;
+    gap: 14px;
+    padding: 20px 12px;
+  }
+  .socialIdx { display: none; }
+  .socialVal { display: none; }
+  .socialIco { width: 48px; height: 48px; }
+  .socialName { font-size: 22px; }
+  .socialRow:hover { padding-left: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socialRow, .socialIco, .socialName::after, .socialArr, .socialVal {
+    transition: none !important;
+  }
+}
