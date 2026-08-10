@@ -1,19 +1,19 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const isGithubPages = process.env.DEPLOY_TARGET === "github-pages";
+const deployTarget = process.env.DEPLOY_TARGET || "";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
   outputFileTracingRoot: path.join(__dirname),
-  // 静态导出仅在 GitHub Pages 部署时启用
-  ...(isGithubPages
+  // 静态导出在 GitHub Pages / Cloudflare Pages 部署时启用
+  ...(deployTarget
     ? {
         output: "export" as const,
         trailingSlash: true,
-        basePath: "/mch-website",
+        basePath: deployTarget === "github-pages" ? "/mch-website" : "",
         images: { unoptimized: true },
       }
     : {
