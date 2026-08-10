@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { navItems } from '@/data/nav';
 import styles from './Navbar.module.css';
 
@@ -17,12 +18,12 @@ export function Navbar() {
   return (
     <nav id="navbar" className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
       <div className={styles.inner}>
-        <a href="/" className={styles.logo}>
+        <Link href="/" className={styles.logo}>
           <svg width="28" height="28" viewBox="0 0 40 40">
             <use href="#sym-star" style={{ color: 'var(--sun)' }} />
           </svg>
           <span>马晨皓</span>
-        </a>
+        </Link>
 
         <button
           className={styles.toggle}
@@ -37,7 +38,7 @@ export function Navbar() {
         <ul className={`${styles.links} ${menuOpen ? styles.open : ''}`}>
           {navItems.map((item) => (
             <li key={item.href}>
-              <a
+              <Link
                 href={item.href}
                 className={item.isCta ? styles.cta : ''}
                 onClick={() => setMenuOpen(false)}
@@ -55,7 +56,7 @@ export function Navbar() {
                   <use href={`#sym-${item.symbol}`} style={{ color: item.symbolColor }} />
                 </svg>
                 {item.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

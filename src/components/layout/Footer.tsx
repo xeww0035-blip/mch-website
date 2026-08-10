@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { footerLinks } from '@/data/nav';
 import styles from './Footer.module.css';
 
@@ -22,9 +23,9 @@ export function Footer() {
         </p>
         <div className={styles.links}>
           {footerLinks.map((link) => (
-            <a key={link.href} href={link.href}>
+            <Link key={link.href} href={link.href}>
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
         <p className={styles.copy}>© 2026 马晨皓 · Made with 粗线条 &amp; 精密秩序</p>

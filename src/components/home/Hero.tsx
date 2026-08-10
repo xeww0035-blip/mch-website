@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Reveal } from '@/components/ui/Reveal';
 import { profile } from '@/data/profile';
 import styles from './Hero.module.css';
@@ -105,14 +106,14 @@ export function Hero() {
           用 AI 把想法更快推向<span className="marker marker-yellow">真实世界</span>。
         </Reveal>
         <Reveal className={styles.cta} delay={300}>
-          <a href="/#works" className="btn btn-primary">
+          <Link href="/#works" className="btn btn-primary">
             <svg width="20" height="20" viewBox="0 0 60 30"><use href="#sym-fish" style={{ color: '#1A1B3A' }} /></svg>
             看看作品
-          </a>
-          <a href="/#about" className="btn btn-ghost">
+          </Link>
+          <Link href="/#about" className="btn btn-ghost">
             <svg width="16" height="16" viewBox="0 0 40 40"><use href="#sym-eye" style={{ color: '#1A1B3A' }} /></svg>
             了解我
-          </a>
+          </Link>
         </Reveal>
       </div>
 
