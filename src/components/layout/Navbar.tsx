@@ -10,56 +10,36 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 32);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false); };
+    const onResize = () => { if (window.innerWidth > 780) setMenuOpen(false); };
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', onResize);
+    document.body.classList.add('menu-is-open');
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', onResize);
+      document.body.classList.remove('menu-is-open');
+    };
+  }, [menuOpen]);
+
   return (
-    <nav id="navbar" className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
+    <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`} aria-label="主导航">
       <div className={styles.inner}>
-        <Link href="/" className={styles.logo}>
-          <svg width="28" height="28" viewBox="0 0 40 40">
-            <use href="#sym-star" style={{ color: 'var(--sun)' }} />
-          </svg>
-          <span>马晨皓</span>
-        </Link>
-
-        <button
-          className={styles.toggle}
-          aria-label="菜单"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span />
-          <span />
-          <span />
+        <Link href="/" className={styles.logo}>MCH <span>/ 2026</span></Link>
+        <button type="button" className={styles.toggle} aria-label={menuOpen ? '关闭菜单' : '打开菜单'} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen((open) => !open)}>
+          <span>{menuOpen ? 'Close' : 'Menu'}</span>
         </button>
-
-        <ul className={`${styles.links} ${menuOpen ? styles.open : ''}`}>
-          {navItems.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className={item.isCta ? styles.cta : ''}
-                onClick={() => setMenuOpen(false)}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox={
-                    item.symbol === 'fish' ? '0 0 60 30'
-                    : item.symbol === 'leaf' || item.symbol === 'tree' ? '0 0 40 50'
-                    : item.symbol === 'key' ? '0 0 50 20'
-                    : '0 0 40 40'
-                  }
-                >
-                  <use href={`#sym-${item.symbol}`} style={{ color: item.symbolColor }} />
-                </svg>
-                {item.label}
-              </Link>
-            </li>
-          ))}
+        <ul id="primary-navigation" className={`${styles.links} ${menuOpen ? styles.open : ''}`}>
+          {navItems.map((item) => <li key={item.href}><Link href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</Link></li>)}
         </ul>
+        <span className={styles.lang}>CN</span>
       </div>
     </nav>
   );

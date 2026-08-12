@@ -1,0 +1,28 @@
+.page { min-height: 100svh; background: #071016; color: #eef3f1; font-family: var(--font-space-grotesk), sans-serif; }
+.canvasFrame { position: relative; height: 100svh; min-height: 640px; overflow: hidden; background: #101e28; }
+.canvasFrame canvas { display: block; touch-action: none; cursor: grab; }
+.canvasFrame canvas:active { cursor: grabbing; }
+.topRail { position: absolute; inset: 22px 28px auto; z-index: 3; display: flex; align-items: center; justify-content: space-between; color: rgba(238,243,241,.62); font: 10px var(--font-mono), monospace; letter-spacing: .12em; pointer-events: none; }
+.backLink { color: inherit; pointer-events: auto; text-decoration: none; transition: color 180ms ease; }
+.backLink:hover { color: #fff4d8; }
+.titleBlock { position: absolute; z-index: 2; left: clamp(24px, 5vw, 90px); bottom: clamp(46px, 7vh, 92px); max-width: 430px; pointer-events: none; text-shadow: 0 8px 30px rgba(3,9,13,.32); transition: opacity 500ms ease, transform 500ms ease; }
+.titleBlock small { color: #f3c884; font: 10px var(--font-mono), monospace; letter-spacing: .16em; }
+.titleBlock h1 { margin: 13px 0 10px; font-family: var(--font-fraunces), serif; font-size: clamp(58px, 7.4vw, 108px); font-weight: 700; letter-spacing: -.06em; line-height: .8; }
+.titleBlock h1 em { color: #d9e6e5; font-weight: 400; }
+.titleBlock p { max-width: 310px; margin: 0; color: rgba(238,243,241,.76); font-size: 13px; line-height: 1.5; }
+.loadingOverlay { position: absolute; right: 28px; bottom: 27px; z-index: 3; display: flex; align-items: center; gap: 14px; color: rgba(238,243,241,.64); font: 9px var(--font-mono), monospace; letter-spacing: .1em; pointer-events: none; transition: opacity 400ms ease; }
+.loadingOverlay[data-ready='true'] { opacity: .72; }
+.loadingOverlay i { color: #f3c884; font-style: normal; }
+.controls { position: absolute; right: 28px; top: 72px; z-index: 3; display: flex; align-items: center; gap: 10px; color: rgba(238,243,241,.65); font: 9px var(--font-mono), monospace; }
+.controls button { padding: 8px 10px; border: 1px solid rgba(238,243,241,.4); background: rgba(7,16,22,.22); color: inherit; font: inherit; letter-spacing: .08em; cursor: pointer; }
+.controls button:hover, .controls button[aria-pressed='true'] { border-color: #f3c884; color: #f3c884; }
+.exploreControl { position: absolute; left: 50%; bottom: 24px; z-index: 4; display: flex; align-items: center; gap: 12px; transform: translateX(-50%); color: rgba(238,243,241,.68); font: 9px var(--font-mono), monospace; letter-spacing: .1em; white-space: nowrap; }
+.exploreControl button { padding: 10px 13px; border: 1px solid rgba(238,243,241,.56); background: rgba(7,20,47,.72); color: #eef3f1; font: inherit; letter-spacing: .1em; cursor: pointer; backdrop-filter: blur(8px); }
+.exploreControl button:hover, .exploreControl button[aria-pressed='true'] { border-color: #f3c884; color: #f3c884; }
+.walkReticle { position: absolute; left: 50%; top: 50%; z-index: 3; width: 7px; height: 7px; border: 1px solid rgba(243,200,132,.86); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 0 0 4px rgba(7,20,47,.18); }
+.page[data-exploring='true'] .titleBlock { opacity: 0; transform: translateY(12px); }
+.canvasLoading, .fallbackMessage { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; gap: 10px; background: radial-gradient(circle at 50% 20%, #355666, #071016 70%); color: #dce8e7; font: 11px var(--font-mono), monospace; letter-spacing: .12em; text-align: center; }
+.fallbackMessage strong { font: 600 22px var(--font-space-grotesk), sans-serif; letter-spacing: -.03em; }
+.fallbackMessage small { color: rgba(238,243,241,.6); font: 12px var(--font-space-grotesk), sans-serif; letter-spacing: 0; }
+@media (max-width: 720px) { .canvasFrame { min-height: 580px; } .topRail { inset: 16px 16px auto; font-size: 8px; } .topRail > span:last-child { display: none; } .controls { top: 54px; right: 16px; } .controls span { display: none; } .titleBlock { left: 20px; bottom: 56px; } .titleBlock h1 { font-size: clamp(64px, 22vw, 108px); } .loadingOverlay { right: 16px; bottom: 16px; font-size: 8px; } .loadingOverlay i { display: none; } .exploreControl { bottom: 76px; flex-direction: column; gap: 6px; } .exploreControl span { font-size: 7px; } }
+@media (prefers-reduced-motion: reduce) { .backLink, .loadingOverlay { transition: none; } }

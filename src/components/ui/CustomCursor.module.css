@@ -1,0 +1,6 @@
+.cursor { position: fixed; top: 0; left: 0; z-index: 2000; width: 9px; height: 9px; border: 1px solid var(--fg); border-radius: 50%; opacity: 0; pointer-events: none; transform: translate3d(-20px, -20px, 0); transition: width var(--motion-normal) var(--ease-out), height var(--motion-normal) var(--ease-out), background var(--motion-normal) ease, opacity var(--motion-fast) ease; mix-blend-mode: difference; }
+.cursor span { position: absolute; top: 16px; left: 16px; color: var(--fg); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; opacity: 0; transition: opacity var(--motion-fast) ease; }
+.visible { opacity: 1; }
+.active { width: 42px; height: 42px; background: var(--accent); border-color: var(--accent); }
+.active span { opacity: 1; }
+@media (pointer: coarse), (prefers-reduced-motion: reduce) { .cursor { display: none; } }

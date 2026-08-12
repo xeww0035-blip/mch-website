@@ -5,6 +5,7 @@ node_modules/
 
 # Next.js
 .next/
+.next-stale-*/
 out/
 build/
 dist/
@@ -44,6 +45,17 @@ Thumbs.db
 *.gltf
 *.fbx
 *.obj
+*.blend
+*.blend1
+
+# Optimized runtime models are small enough for GitHub Pages and are required
+# by /world-test. Keep raw Blender/source exports excluded above.
+!public/models/world-core.glb
+!public/models/mountain.glb
+!public/models/cabin.glb
+!public/models/hero-trees.glb
+!public/models/foreground-prototypes.glb
+!public/models/vegetation-prototypes.glb
 
 # Misc
 *.paw

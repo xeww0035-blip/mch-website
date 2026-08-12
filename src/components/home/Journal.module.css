@@ -1,70 +1,10 @@
-.list {
-  max-width: 860px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 24px;
-  align-items: center;
-  padding: 24px 28px;
-  background: var(--paper);
-  border: var(--stroke) solid var(--ink);
-  border-radius: 18px 14px 22px 12px;
-  transition: all 0.2s;
-}
-
-.item:hover {
-  background: var(--sun);
-  transform: translateX(4px);
-}
-
-.symbol {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2.5px solid var(--ink);
-  border-radius: 12px 8px 14px 6px;
-  background: var(--paper);
-}
-
-.date {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-size: 12px;
-  color: var(--brick);
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.content h3 {
-  font-family: var(--font-display);
-  font-size: 19px;
-  margin-bottom: 4px;
-}
-
-.content p {
-  font-size: 14px;
-  color: rgba(26, 27, 58, 0.6);
-}
-
-.arrow {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--brick);
-}
-
-@media (max-width: 768px) {
-  .item {
-    grid-template-columns: auto 1fr;
-    gap: 14px;
-    padding: 18px;
-  }
-  .arrow { display: none; }
-}
+.list { max-width: var(--container-max); margin: 0 auto; border-top: 1px solid var(--fg); }
+.item { display: grid; grid-template-columns: 92px minmax(0, 1fr) 42px; gap: 24px; align-items: start; padding: 28px 0; border-bottom: 1px solid var(--line); transition: background var(--motion-normal) var(--ease-out), padding-left var(--motion-normal) var(--ease-out); }
+.item:hover { background: var(--accent-soft); padding-left: 18px; }
+.index, .date { color: var(--muted); font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.1em; }
+.date { display: block; margin-bottom: 10px; }
+.content h3 { font-size: clamp(1.7rem, 3vw, 3.4rem); }
+.content p { max-width: 680px; margin-top: 12px; color: var(--muted); font-size: 0.9rem; }
+.arrow { color: var(--accent); font-size: 1.7rem; opacity: 0; transform: translateX(-8px); transition: opacity var(--motion-normal) var(--ease-out), transform var(--motion-normal) var(--ease-out); }
+.item:hover .arrow { opacity: 1; transform: translateX(0); }
+@media (max-width: 620px) { .item { grid-template-columns: 40px minmax(0, 1fr) 20px; gap: 12px; padding: 22px 0; } .content h3 { font-size: 1.55rem; } .content p { font-size: 0.82rem; } }
