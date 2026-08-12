@@ -8,15 +8,41 @@ function errorMessage(error, fallback) {
   return error instanceof Error ? error.message : fallback;
 }
 
+async function fetchModel(url) {
+  const response = await fetch(url, { cache: 'force-cache' });
+  if (!response.ok) throw new Error(`Gesture model request failed: HTTP ${response.status}`);
+  const total = Number(response.headers.get('content-length')) || 0;
+  if (!response.body) return new Uint8Array(await response.arrayBuffer());
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let loaded = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.byteLength;
+    self.postMessage({ type: 'MODEL_PROGRESS', loaded, total });
+  }
+  const model = new Uint8Array(loaded);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    model.set(chunk, offset);
+    offset += chunk.byteLength;
+  });
+  return model;
+}
+
 self.onmessage = async (event) => {
   const data = event.data;
 
   if (data.type === 'INIT') {
     try {
       const vision = await FilesetResolver.forVisionTasks(data.wasmBaseUrl);
+      const modelAssetBuffer = await fetchModel(data.modelUrl);
       recognizer = await GestureRecognizer.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: data.modelUrl,
+          modelAssetBuffer,
           delegate: 'CPU',
         },
         runningMode: 'VIDEO',

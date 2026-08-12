@@ -20,6 +20,8 @@ type Props = {
   reducedMotion: boolean;
   exploring: boolean;
   overviewResetKey: number;
+  readyModels: string[];
+  onModelReady: (path: string) => void;
 };
 
 function AdaptiveWorldCamera({ exploring }: { exploring: boolean }) {
@@ -50,9 +52,9 @@ function OverviewCameraReset({ exploring, resetKey }: { exploring: boolean; rese
   return null;
 }
 
-export default function WorldTestCanvas({ assetPaths, hasCore, hasWorldCore, hasCabin, hasWorldTest, quality, reducedMotion, exploring, overviewResetKey }: Props) {
-  const hasVegetation = assetPaths.some((path) => path.endsWith('/vegetation-prototypes.glb') || path.endsWith('/hero-trees.glb') || path.endsWith('/foreground-prototypes.glb'));
-  const hasForeground = assetPaths.some((path) => path.endsWith('/foreground-prototypes.glb'));
+export default function WorldTestCanvas({ assetPaths, hasCore, hasWorldCore, hasCabin, hasWorldTest, quality, reducedMotion, exploring, overviewResetKey, readyModels, onModelReady }: Props) {
+  const hasVegetation = readyModels.some((path) => path.endsWith('/vegetation-prototypes.glb') || path.endsWith('/hero-trees.glb') || path.endsWith('/foreground-prototypes.glb'));
+  const hasForeground = readyModels.some((path) => path.endsWith('/foreground-prototypes.glb'));
   useEffect(() => {
     assetPaths.forEach(preloadWorldModel);
   }, [assetPaths]);
@@ -82,28 +84,28 @@ export default function WorldTestCanvas({ assetPaths, hasCore, hasWorldCore, has
         shadow-camera-bottom={-30}
       />
       <hemisphereLight args={['#9abaca', '#122026', 0.75]} />
-      <Suspense fallback={null}>
-        <FallbackWorld
-          quality={quality}
-          reducedMotion={reducedMotion}
-          showTerrain={!hasCore}
-          showBase={!hasWorldCore && !hasWorldTest}
-          showCabin={!hasCabin && !hasWorldTest}
-          showVegetation={!hasVegetation && !hasWorldTest}
-          showRocks={!hasForeground && !hasWorldTest}
-        />
-        {assetPaths.map((path) => (
-          <WorldModelErrorBoundary key={path}>
+      <FallbackWorld
+        quality={quality}
+        reducedMotion={reducedMotion}
+        showTerrain={!hasCore}
+        showBase={!hasWorldCore && !hasWorldTest}
+        showCabin={!hasCabin && !hasWorldTest}
+        showVegetation={!hasVegetation && !hasWorldTest}
+        showRocks={!hasForeground && !hasWorldTest}
+      />
+      {assetPaths.map((path) => (
+        <WorldModelErrorBoundary key={path}>
+          <Suspense fallback={null}>
             {path.endsWith('/foreground-prototypes.glb')
-              ? <WorldForegroundInstances path={path} quality={quality} />
+              ? <WorldForegroundInstances path={path} quality={quality} onReady={onModelReady} />
               : path.endsWith('/hero-trees.glb')
-              ? <WorldHeroTreeInstances path={path} quality={quality} />
+              ? <WorldHeroTreeInstances path={path} quality={quality} onReady={onModelReady} />
               : path.endsWith('/vegetation-prototypes.glb')
-              ? <WorldVegetationInstances path={path} count={quality === 'high' ? 32 : 16} />
-              : <WorldModelAsset path={path} />}
-          </WorldModelErrorBoundary>
-        ))}
-      </Suspense>
+              ? <WorldVegetationInstances path={path} count={quality === 'high' ? 32 : 16} onReady={onModelReady} />
+              : <WorldModelAsset path={path} onReady={onModelReady} />}
+          </Suspense>
+        </WorldModelErrorBoundary>
+      ))}
       {exploring ? (
         <WorldWalkControls reducedMotion={reducedMotion} />
       ) : (

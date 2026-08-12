@@ -13,6 +13,7 @@ type RecognitionResult = {
 };
 type WorkerMessage =
   | { type: 'READY' }
+  | { type: 'MODEL_PROGRESS'; loaded: number; total: number }
   | { type: 'RESULT'; result: RecognitionResult; inferenceTime: number }
   | { type: 'ERROR'; error: string };
 
@@ -20,7 +21,9 @@ type GestureCopy = { title: string; action: string };
 
 const PUBLIC_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 const WASM_BASE_URL = `${PUBLIC_BASE_PATH}/mediapipe/wasm`;
-const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task';
+// Same-origin hosting avoids the Google model endpoint, which can stall on
+// mainland networks even when the GitHub Pages application itself loads.
+const MODEL_URL = `${PUBLIC_BASE_PATH}/mediapipe/gesture_recognizer.task`;
 const GESTURE_WORKER_URL = `${PUBLIC_BASE_PATH}/workers/gesture-recognizer.worker.js`;
 const PINCH_DOWN = 0.055;
 const PINCH_UP = 0.082;
@@ -146,10 +149,12 @@ export function GestureControl() {
   const [gestureLabel, setGestureLabel] = useState('No_Hand');
   const [gestureConfidence, setGestureConfidence] = useState(0);
   const [inference, setInference] = useState(0);
+  const [modelProgress, setModelProgress] = useState(0);
   const [error, setError] = useState('');
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const skeletonRef = useRef<HTMLCanvasElement>(null);
+  const captureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -349,13 +354,20 @@ export function GestureControl() {
       return;
     }
     setError('');
+    setModelProgress(0);
     setStatus('requesting');
     stoppedRef.current = false;
     workerRetryRef.current = 0;
     try {
+      const mobileCapture = navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30, max: 30 } },
+        video: {
+          facingMode: 'user',
+          width: { ideal: mobileCapture ? 480 : 640 },
+          height: { ideal: mobileCapture ? 360 : 480 },
+          frameRate: { ideal: mobileCapture ? 24 : 30, max: 30 },
+        },
       });
       if (stoppedRef.current) {
         stream.getTracks().forEach((track) => track.stop());
@@ -412,7 +424,10 @@ export function GestureControl() {
             workerRetryRef.current = 0;
             workerReadyRef.current = true;
             setError('');
+            setModelProgress(100);
             setStatus('active');
+          } else if (message.type === 'MODEL_PROGRESS') {
+            if (message.total > 0) setModelProgress(Math.min(99, Math.round((message.loaded / message.total) * 100)));
           } else if (message.type === 'RESULT') {
             handleResult(message.result, message.inferenceTime);
           } else if (message.type === 'ERROR') {
@@ -426,7 +441,7 @@ export function GestureControl() {
         };
         worker.onmessageerror = () => failWorker('Worker 返回了无法读取的数据');
         worker.postMessage({ type: 'INIT', wasmBaseUrl: WASM_BASE_URL, modelUrl: MODEL_URL, numHands: 1 });
-        workerInitTimerRef.current = window.setTimeout(() => failWorker('模型初始化超过 20 秒'), 20_000);
+        workerInitTimerRef.current = window.setTimeout(() => failWorker('识别模型加载超过 60 秒，请检查当前网络后重试'), 60_000);
       };
 
       bootWorker();
@@ -434,11 +449,26 @@ export function GestureControl() {
       const detect = async (time: number) => {
         if (stoppedRef.current) return;
         rafRef.current = requestAnimationFrame(detect);
-        if (!workerReadyRef.current || framePendingRef.current || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || time - lastFrameRef.current < FRAME_INTERVAL) return;
+        const frameInterval = mobileCapture ? 100 : FRAME_INTERVAL;
+        if (!workerReadyRef.current || framePendingRef.current || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || time - lastFrameRef.current < frameInterval) return;
         lastFrameRef.current = time;
         framePendingRef.current = true;
         try {
-          const bitmap = await createImageBitmap(video);
+          let bitmap: ImageBitmap;
+          try {
+            bitmap = await createImageBitmap(video);
+          } catch {
+            // Some iOS/WKWebView builds expose createImageBitmap but reject a
+            // video source. Drawing to a canvas first keeps worker inference.
+            const canvas = captureCanvasRef.current ?? document.createElement('canvas');
+            captureCanvasRef.current = canvas;
+            canvas.width = video.videoWidth || (mobileCapture ? 480 : 640);
+            canvas.height = video.videoHeight || (mobileCapture ? 360 : 480);
+            const context = canvas.getContext('2d', { alpha: false });
+            if (!context) throw new Error('Camera frame capture is unavailable');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            bitmap = await createImageBitmap(canvas);
+          }
           if (stoppedRef.current || !workerRef.current) {
             bitmap.close();
             framePendingRef.current = false;
@@ -464,7 +494,7 @@ export function GestureControl() {
     <div className={styles.root} data-gesture-ui>
       <button className={`${styles.toggle} ${status === 'active' ? styles.toggleActive : ''}`} type="button" onClick={status === 'idle' || status === 'error' ? start : () => stop('idle')} aria-pressed={status === 'active'}>
         <span className={styles.signal} />
-        {status === 'idle' || status === 'error' ? 'Hand Control' : status === 'requesting' ? 'Camera permission…' : status === 'loading' ? 'Loading model…' : 'Stop Hand Control'}
+        {status === 'idle' || status === 'error' ? 'Hand Control' : status === 'requesting' ? 'Camera permission…' : status === 'loading' ? `Loading model ${modelProgress || 0}%` : 'Stop Hand Control'}
       </button>
 
       {(status === 'requesting' || status === 'loading' || status === 'active') && (
@@ -479,7 +509,7 @@ export function GestureControl() {
             <div>
               <small>当前动作 / GESTURE</small>
               <strong aria-live="polite">{status === 'active' ? currentGesture.title : '正在加载识别模型'}</strong>
-              <p>{status === 'active' ? currentGesture.action : '模型只在本机浏览器中运行，请稍候'}</p>
+              <p>{status === 'active' ? currentGesture.action : `模型正在从本站加载，不连接 Google；当前 ${modelProgress || 0}%`}</p>
             </div>
             <span>{status === 'active' ? `${gestureConfidence}% · ${inference} MS` : status.toUpperCase()}</span>
           </div>

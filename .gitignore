@@ -56,6 +56,7 @@ Thumbs.db
 !public/models/hero-trees.glb
 !public/models/foreground-prototypes.glb
 !public/models/vegetation-prototypes.glb
+!public/mediapipe/gesture_recognizer.task
 
 # Misc
 *.paw

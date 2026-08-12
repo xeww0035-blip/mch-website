@@ -68,6 +68,8 @@ The active GLB payload is approximately 4 MB. Assets use 256px WebP textures, Dr
 - Low quality mode uses half of the restored instances and fewer snow particles.
 - `prefers-reduced-motion` pauses aurora and snowfall motion and switches the Canvas to demand rendering.
 - WebGL and missing-model fallbacks remain available.
+- The procedural Alpine world now renders outside the GLB Suspense boundaries, so slow networks see mountains, lake, cabin, trees, aurora and snow immediately instead of a navy blank screen.
+- Each GLB owns an independent Suspense boundary. Core terrain arrives first; cabin and hero trees follow; the 2.7 MB foreground detail layer is delayed on mobile/low-power devices without deleting it.
 
 ## Verification
 

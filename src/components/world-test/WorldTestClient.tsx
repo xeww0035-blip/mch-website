@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import styles from './WorldTest.module.css';
 
 const WorldTestCanvas = dynamic(() => import('./WorldTestCanvas'), {
@@ -26,12 +26,14 @@ function modelUrl(path: string) {
 export function WorldTestClient({ embedded = false }: { embedded?: boolean }) {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [activeModels, setActiveModels] = useState<string[]>([]);
+  const [readyModels, setReadyModels] = useState<string[]>([]);
   const [inventoryReady, setInventoryReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [effectsOff, setEffectsOff] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
   const [exploring, setExploring] = useState(false);
   const [overviewResetKey, setOverviewResetKey] = useState(0);
+  const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
     document.body.classList.add(embedded ? 'alpine-home-mode' : 'world-test-mode');
@@ -56,15 +58,15 @@ export function WorldTestClient({ embedded = false }: { embedded?: boolean }) {
     const primary = deployableModels.filter((path) => path.endsWith('/world-core.glb') || path.endsWith('/mountain.glb'));
     const wholeScene = deployableModels.filter((path) => path.endsWith('/world-test.glb'));
     setActiveModels(primary.length ? primary : wholeScene);
-    const cabinTimer = window.setTimeout(() => setActiveModels((current) => [...new Set([...current, ...deployableModels.filter((path) => path.endsWith('/cabin.glb'))])]), 500);
-    const heroTreesTimer = window.setTimeout(() => setActiveModels((current) => [...new Set([...current, ...deployableModels.filter((path) => path.endsWith('/hero-trees.glb'))])]), 900);
-    const foregroundTimer = window.setTimeout(() => setActiveModels((current) => [...new Set([...current, ...deployableModels.filter((path) => path.endsWith('/foreground-prototypes.glb'))])]), 1200);
+    const cabinTimer = window.setTimeout(() => setActiveModels((current) => [...new Set([...current, ...deployableModels.filter((path) => path.endsWith('/cabin.glb'))])]), 350);
+    const heroTreesTimer = window.setTimeout(() => setActiveModels((current) => [...new Set([...current, ...deployableModels.filter((path) => path.endsWith('/hero-trees.glb'))])]), isLowPower ? 1600 : 750);
+    const foregroundTimer = window.setTimeout(() => setActiveModels((current) => [...new Set([...current, ...deployableModels.filter((path) => path.endsWith('/foreground-prototypes.glb'))])]), isLowPower ? 6500 : 1800);
     return () => {
       window.clearTimeout(cabinTimer);
       window.clearTimeout(heroTreesTimer);
       window.clearTimeout(foregroundTimer);
     };
-  }, [availableModels]);
+  }, [availableModels, isLowPower]);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -73,6 +75,7 @@ export function WorldTestClient({ embedded = false }: { embedded?: boolean }) {
     media.addEventListener('change', update);
     const canvas = document.createElement('canvas');
     setUnsupported(!canvas.getContext('webgl2') && !canvas.getContext('webgl'));
+    setIsLowPower(navigator.hardwareConcurrency <= 4 || navigator.maxTouchPoints > 0 || window.innerWidth <= 768);
     return () => media.removeEventListener('change', update);
   }, []);
 
@@ -97,14 +100,14 @@ export function WorldTestClient({ embedded = false }: { embedded?: boolean }) {
     return () => { cancelled = true; };
   }, []);
 
-  const hasCore = activeModels.some((path) => path.endsWith('/world-core.glb') || path.endsWith('/mountain.glb') || path.endsWith('/world-test.glb'));
-  const hasWorldCore = activeModels.some((path) => path.endsWith('/world-core.glb') || path.endsWith('/world-test.glb'));
-  const hasWorldTest = activeModels.some((path) => path.endsWith('/world-test.glb'));
-  const hasCabin = activeModels.some((path) => path.endsWith('/cabin.glb'));
-  const isLowPower = useMemo(() => {
-    if (typeof navigator === 'undefined') return false;
-    return navigator.hardwareConcurrency <= 4 || navigator.maxTouchPoints > 0;
+  const handleModelReady = useCallback((path: string) => {
+    setReadyModels((current) => current.includes(path) ? current : [...current, path]);
   }, []);
+
+  const hasCore = readyModels.some((path) => path.endsWith('/mountain.glb') || path.endsWith('/world-test.glb'));
+  const hasWorldCore = readyModels.some((path) => path.endsWith('/world-core.glb') || path.endsWith('/world-test.glb'));
+  const hasWorldTest = readyModels.some((path) => path.endsWith('/world-test.glb'));
+  const hasCabin = readyModels.some((path) => path.endsWith('/cabin.glb'));
   const quality = effectsOff || reducedMotion || isLowPower ? 'low' : 'high';
   const world = (
     <div className={styles.page} data-exploring={exploring}>
@@ -126,6 +129,8 @@ export function WorldTestClient({ embedded = false }: { embedded?: boolean }) {
             reducedMotion={reducedMotion}
             exploring={exploring}
             overviewResetKey={overviewResetKey}
+            readyModels={readyModels}
+            onModelReady={handleModelReady}
           />
         )}
         <div className={styles.topRail}>
@@ -134,8 +139,8 @@ export function WorldTestClient({ embedded = false }: { embedded?: boolean }) {
           <span>01 — 04</span>
         </div>
         <div className={styles.loadingOverlay} data-ready={inventoryReady}>
-          <span>{inventoryReady ? (availableModels.length ? 'GLB ENHANCEMENT READY' : '3D ASSETS PENDING') : 'SCANNING ASSETS'}</span>
-          <i>{availableModels.length ? `${availableModels.length} OPTIONAL FILE${availableModels.length === 1 ? '' : 'S'}` : 'PROCEDURAL FALLBACK ACTIVE'}</i>
+          <span>{inventoryReady ? (availableModels.length ? `${readyModels.length}/${availableModels.length} SCENE LAYERS READY` : '3D ASSETS PENDING') : 'SCANNING ASSETS'}</span>
+          <i>{availableModels.length ? (readyModels.length < availableModels.length ? 'DETAILS STREAMING' : 'FULL WORLD READY') : 'PROCEDURAL FALLBACK ACTIVE'}</i>
         </div>
         <div className={styles.titleBlock}>
           <small>CINEMATIC NATURE / 2026</small>

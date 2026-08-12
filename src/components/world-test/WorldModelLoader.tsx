@@ -43,7 +43,7 @@ function frameRearMountains(scene: THREE.Object3D) {
   scene.updateMatrixWorld(true);
 }
 
-export function WorldModelAsset({ path }: { path: string }) {
+export function WorldModelAsset({ path, onReady }: { path: string; onReady?: (path: string) => void }) {
   const gltf = useGLTF(resolvedPath(path));
   const scene = useMemo(() => {
     const clonedScene = gltf.scene.clone(true);
@@ -88,7 +88,8 @@ export function WorldModelAsset({ path }: { path: string }) {
         }
       }
     });
-  }, [path, scene]);
+    onReady?.(path);
+  }, [onReady, path, scene]);
   return (
     <group>
       <primitive object={scene} dispose={null} />
@@ -136,7 +137,7 @@ function VegetationPart({ part, count }: { part: PrototypePart; count: number })
   return <instancedMesh ref={ref} args={[part.geometry, part.material, count]} castShadow={false} receiveShadow={false} />;
 }
 
-export function WorldVegetationInstances({ path, count }: { path: string; count: number }) {
+export function WorldVegetationInstances({ path, count, onReady }: { path: string; count: number; onReady?: (path: string) => void }) {
   const gltf = useGLTF(resolvedPath(path));
   const parts = useMemo(() => {
     gltf.scene.updateMatrixWorld(true);
@@ -154,6 +155,7 @@ export function WorldVegetationInstances({ path, count }: { path: string; count:
     });
     return result;
   }, [gltf.scene]);
+  useEffect(() => onReady?.(path), [onReady, path]);
   return <group>{parts.map((part, index) => <VegetationPart key={index} part={part} count={count} />)}</group>;
 }
 
@@ -196,7 +198,7 @@ function ForegroundPart({ part, transforms }: { part: NamedPrototypePart; transf
   return <instancedMesh ref={ref} args={[part.geometry, part.material, transforms.length]} castShadow={false} receiveShadow frustumCulled={false} />;
 }
 
-function WorldPlacedInstances({ path, dataPath, quality }: { path: string; dataPath: string; quality: 'high' | 'low' }) {
+function WorldPlacedInstances({ path, dataPath, quality, onReady }: { path: string; dataPath: string; quality: 'high' | 'low'; onReady?: (path: string) => void }) {
   const gltf = useGLTF(resolvedPath(path));
   const rawData = useLoader(THREE.FileLoader, resolvedPath(dataPath)) as string;
   const data = useMemo(() => JSON.parse(rawData) as ForegroundData, [rawData]);
@@ -233,6 +235,7 @@ function WorldPlacedInstances({ path, dataPath, quality }: { path: string; dataP
     });
     return result;
   }, [gltf.scene, transformsByPrototype]);
+  useEffect(() => onReady?.(path), [onReady, path]);
   return (
     <group>
       {parts.map((part, index) => (
@@ -242,12 +245,12 @@ function WorldPlacedInstances({ path, dataPath, quality }: { path: string; dataP
   );
 }
 
-export function WorldForegroundInstances({ path, quality }: { path: string; quality: 'high' | 'low' }) {
-  return <WorldPlacedInstances path={path} dataPath="/models/foreground-instances.json" quality={quality} />;
+export function WorldForegroundInstances({ path, quality, onReady }: { path: string; quality: 'high' | 'low'; onReady?: (path: string) => void }) {
+  return <WorldPlacedInstances path={path} dataPath="/models/foreground-instances.json" quality={quality} onReady={onReady} />;
 }
 
-export function WorldHeroTreeInstances({ path, quality }: { path: string; quality: 'high' | 'low' }) {
-  return <WorldPlacedInstances path={path} dataPath="/models/hero-tree-instances.json" quality={quality} />;
+export function WorldHeroTreeInstances({ path, quality, onReady }: { path: string; quality: 'high' | 'low'; onReady?: (path: string) => void }) {
+  return <WorldPlacedInstances path={path} dataPath="/models/hero-tree-instances.json" quality={quality} onReady={onReady} />;
 }
 
 type BoundaryProps = { children: ReactNode };

@@ -56,5 +56,5 @@ The world consumes the normalized pointer event with a Three.js raycaster. Point
 ## MediaPipe resources
 
 - Runtime JS/WASM: same-origin assets copied from `@mediapipe/tasks-vision@1.0.1`; loaded lazily after opt-in.
-- Model: official Google-hosted `gesture_recognizer.task` float16 model.
+- Model: official float16 `gesture_recognizer.task`, stored at `public/mediapipe/gesture_recognizer.task` and loaded from the same origin. Runtime recognition no longer depends on `storage.googleapis.com`, which avoids model-startup stalls on mainland networks.
 - Recognition delegate: CPU inside the worker to avoid competing with the Three.js WebGL context.

@@ -29,8 +29,8 @@
 .pinching { width: 34px; height: 34px; margin: -17px 0 0 -17px; background: rgba(182, 75, 69, 0.16); }
 @media (max-width: 640px) {
   .root { right: 10px; bottom: 10px; }
-  .panel { width: min(330px, calc(100vw - 20px)); }
-  .preview { height: 150px; }
+  .panel { width: min(350px, calc(100vw - 20px)); max-height: calc(100svh - 72px); overflow-y: auto; }
+  .preview { height: clamp(118px, 32vw, 145px); }
   .legend { grid-template-columns: repeat(3, 1fr); row-gap: 10px; }
   .legend > div:nth-child(4) { padding-left: 0; border-left: 0; }
   .readout > span { display: none; }
