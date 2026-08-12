@@ -13,7 +13,9 @@ type RecognitionResult = {
 };
 type WorkerMessage =
   | { type: 'READY' }
+  | { type: 'LOAD_STAGE'; stage: string; label: string }
   | { type: 'MODEL_PROGRESS'; loaded: number; total: number }
+  | { type: 'RUNTIME_PROGRESS'; loaded: number; total: number }
   | { type: 'RESULT'; result: RecognitionResult; inferenceTime: number }
   | { type: 'ERROR'; error: string };
 
@@ -24,7 +26,10 @@ const WASM_BASE_URL = `${PUBLIC_BASE_PATH}/mediapipe/wasm`;
 // Same-origin hosting avoids the Google model endpoint, which can stall on
 // mainland networks even when the GitHub Pages application itself loads.
 const MODEL_URL = `${PUBLIC_BASE_PATH}/mediapipe/gesture_recognizer.task`;
-const GESTURE_WORKER_URL = `${PUBLIC_BASE_PATH}/workers/gesture-recognizer.worker.js`;
+const MODEL_SIZE = 8_373_440;
+// Query version prevents GitHub Pages / embedded browsers from reusing the
+// previous worker that aborted slow downloads after 60 seconds.
+const GESTURE_WORKER_URL = `${PUBLIC_BASE_PATH}/workers/gesture-recognizer.worker.js?v=4`;
 const PINCH_DOWN = 0.055;
 const PINCH_UP = 0.082;
 const FRAME_INTERVAL = 66;
@@ -150,6 +155,8 @@ export function GestureControl() {
   const [gestureConfidence, setGestureConfidence] = useState(0);
   const [inference, setInference] = useState(0);
   const [modelProgress, setModelProgress] = useState(0);
+  const [runtimeProgress, setRuntimeProgress] = useState(0);
+  const [loadStage, setLoadStage] = useState('正在准备摄像头');
   const [error, setError] = useState('');
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -158,7 +165,6 @@ export function GestureControl() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const workerRetryRef = useRef(0);
   const workerInitTimerRef = useRef<number | null>(null);
   const rafRef = useRef(0);
   const workerReadyRef = useRef(false);
@@ -355,9 +361,10 @@ export function GestureControl() {
     }
     setError('');
     setModelProgress(0);
+    setRuntimeProgress(0);
+    setLoadStage('正在请求摄像头权限');
     setStatus('requesting');
     stoppedRef.current = false;
-    workerRetryRef.current = 0;
     try {
       const mobileCapture = navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -383,6 +390,7 @@ export function GestureControl() {
       video.srcObject = stream;
       await video.play();
       setStatus('loading');
+      setLoadStage('正在启动本地识别引擎');
       document.body.classList.add('gesture-control-active');
 
       const bootWorker = () => {
@@ -404,14 +412,9 @@ export function GestureControl() {
           framePendingRef.current = false;
           console.error('[GestureControl] worker failed', reason);
 
-          if (workerRetryRef.current < 1) {
-            workerRetryRef.current += 1;
-            setError('手势识别线程启动失败，正在自动重试…');
-            window.setTimeout(bootWorker, 350);
-            return;
-          }
-
-          setError(`手势识别启动失败：${reason}。请刷新页面后重试。`);
+          // Do not silently restart a large download. On slow mainland
+          // connections that old retry loop repeatedly reset progress to 0.
+          setError(`手势识别启动失败：${reason}。请点击 Hand Control 重试；已下载模型会继续使用本机缓存。`);
           stop('error');
         };
 
@@ -421,13 +424,18 @@ export function GestureControl() {
           if (message.type === 'READY') {
             if (workerInitTimerRef.current !== null) window.clearTimeout(workerInitTimerRef.current);
             workerInitTimerRef.current = null;
-            workerRetryRef.current = 0;
             workerReadyRef.current = true;
             setError('');
             setModelProgress(100);
+            setRuntimeProgress(100);
+            setLoadStage('识别引擎已就绪');
             setStatus('active');
+          } else if (message.type === 'LOAD_STAGE') {
+            setLoadStage(message.label);
           } else if (message.type === 'MODEL_PROGRESS') {
             if (message.total > 0) setModelProgress(Math.min(99, Math.round((message.loaded / message.total) * 100)));
+          } else if (message.type === 'RUNTIME_PROGRESS') {
+            if (message.total > 0) setRuntimeProgress(Math.min(99, Math.round((message.loaded / message.total) * 100)));
           } else if (message.type === 'RESULT') {
             handleResult(message.result, message.inferenceTime);
           } else if (message.type === 'ERROR') {
@@ -440,8 +448,10 @@ export function GestureControl() {
           failWorker(`${event.message || 'Worker 脚本加载异常'}${location}`);
         };
         worker.onmessageerror = () => failWorker('Worker 返回了无法读取的数据');
-        worker.postMessage({ type: 'INIT', wasmBaseUrl: WASM_BASE_URL, modelUrl: MODEL_URL, numHands: 1 });
-        workerInitTimerRef.current = window.setTimeout(() => failWorker('识别模型加载超过 60 秒，请检查当前网络后重试'), 60_000);
+        worker.postMessage({ type: 'INIT', wasmBaseUrl: WASM_BASE_URL, modelUrl: MODEL_URL, modelSize: MODEL_SIZE, numHands: 1 });
+        // A slow connection should be allowed to finish once instead of being
+        // terminated and restarted. Users can always cancel with the button.
+        workerInitTimerRef.current = window.setTimeout(() => failWorker('本地识别引擎加载超过 3 分钟，请检查网络后重试'), 180_000);
       };
 
       bootWorker();
@@ -489,12 +499,13 @@ export function GestureControl() {
   useEffect(() => () => stop('idle'), [stop]);
 
   const currentGesture = gestureCopy(gestureLabel);
+  const loadingProgress = Math.round((modelProgress + runtimeProgress) / 2);
 
   return (
     <div className={styles.root} data-gesture-ui>
       <button className={`${styles.toggle} ${status === 'active' ? styles.toggleActive : ''}`} type="button" onClick={status === 'idle' || status === 'error' ? start : () => stop('idle')} aria-pressed={status === 'active'}>
         <span className={styles.signal} />
-        {status === 'idle' || status === 'error' ? 'Hand Control' : status === 'requesting' ? 'Camera permission…' : status === 'loading' ? `Loading model ${modelProgress || 0}%` : 'Stop Hand Control'}
+        {status === 'idle' || status === 'error' ? 'Hand Control' : status === 'requesting' ? 'Camera permission…' : status === 'loading' ? (loadingProgress > 0 ? `Loading ${loadingProgress}%` : 'Starting engine…') : 'Stop Hand Control'}
       </button>
 
       {(status === 'requesting' || status === 'loading' || status === 'active') && (
@@ -508,8 +519,8 @@ export function GestureControl() {
           <div className={styles.readout}>
             <div>
               <small>当前动作 / GESTURE</small>
-              <strong aria-live="polite">{status === 'active' ? currentGesture.title : '正在加载识别模型'}</strong>
-              <p>{status === 'active' ? currentGesture.action : `模型正在从本站加载，不连接 Google；当前 ${modelProgress || 0}%`}</p>
+              <strong aria-live="polite">{status === 'active' ? currentGesture.title : loadStage}</strong>
+              <p>{status === 'active' ? currentGesture.action : `本站并行加载，不连接 Google；模型 ${modelProgress || 0}% · 引擎 ${runtimeProgress || 0}%（成功后本机复用）`}</p>
             </div>
             <span>{status === 'active' ? `${gestureConfidence}% · ${inference} MS` : status.toUpperCase()}</span>
           </div>
